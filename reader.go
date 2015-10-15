@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -38,15 +39,29 @@ func (s *SerialCSVReader) Next() (SerialFrame, error) {
 	}
 	if len(row[1]) == 1 {
 		rv.Value = row[1][0]
+	} else if row[1] == "COMMA" {
+		rv.Value = ','
+	} else if strings.HasPrefix(row[1], "0x") {
+		i, err := strconv.ParseInt(row[1][2:], 16, 16)
+		if err != nil {
+			return rv, fmt.Errorf("error parsing %v, %v", row, err)
+		}
+		rv.Value = byte(i)
 	} else {
 		c := row[1]
 		switch c[0] {
+		case '"':
+			rv.Value = '"'
 		case '\'':
-			i, err := strconv.ParseInt(c[1:len(c)-1], 10, 16)
-			if err != nil {
-				return rv, fmt.Errorf("error parsing %v, %v", row, err)
+			if c[1] == ' ' {
+				rv.Value = ' '
+			} else {
+				i, err := strconv.ParseInt(c[1:len(c)-1], 10, 16)
+				if err != nil {
+					return rv, fmt.Errorf("error parsing %v, %v", row, err)
+				}
+				rv.Value = byte(i)
 			}
-			rv.Value = byte(i)
 		case '\\':
 			switch c[1] {
 			case 't':
