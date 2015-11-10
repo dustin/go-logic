@@ -18,7 +18,9 @@ type SerialFrame struct {
 	FramingErr bool
 }
 
-// CSVReader emits records read from a Logic trace export.
+// SerialCSVReader emits records read from a Logic trace export.
+// Attempts are made to parse the default format, but it's really kind
+// of inconsistent.  Best to use the hex format.
 type SerialCSVReader struct {
 	c *csv.Reader
 }
